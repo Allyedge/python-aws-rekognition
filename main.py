@@ -2,35 +2,48 @@ import boto3
 import io
 from PIL import Image, ImageDraw, ImageFont
 
-example_image = 'dev/example.jpg'
+example_image = "dev/example.jpg"
 
-rekognition_client = boto3.client('rekognition')
+rekognition_client = boto3.client("rekognition")
 
-with open(example_image, 'rb') as image:
-    image_bytes = image.read()
 
-    response = rekognition_client.detect_labels(Image={'Bytes': image_bytes})
+def main():
+    image_path = input("Enter image path: ")
+    output_path = input("Enter output path: ")
 
-    image = Image.open(io.BytesIO(image_bytes))
+    recognize(image_path, output_path)
 
-    font = ImageFont.truetype('dev/fonts/arial.ttf', size=32)
 
-    draw = ImageDraw.Draw(image)
+def recognize(image_path: str, output_path: str):
+    with open(image_path, "rb") as image:
+        image_bytes = image.read()
 
-    width, height = image.size
+        response = rekognition_client.detect_labels(Image={"Bytes": image_bytes})
 
-    for label in response['Labels']:
-        name = label['Name']
+        image = Image.open(io.BytesIO(image_bytes))
 
-        for instance in label['Instances']:
-            bounding_box = instance['BoundingBox']
+        font = ImageFont.truetype("dev/fonts/arial.ttf", size=32)
 
-            x0 = int(bounding_box['Left'] * width)
-            y0 = int(bounding_box['Top'] * height)
-            x1 = x0 + int(bounding_box['Width'] * width)
-            y1 = y0 + int(bounding_box['Height'] * height)
+        draw = ImageDraw.Draw(image)
 
-            draw.rectangle([x0, y0, x1, y1], outline=(255, 0, 0), width=10)
-            draw.text((x0, y1), name, font=font, fill=(255, 0, 0))
+        width, height = image.size
 
-    image.save('dev/output.jpg')
+        for label in response["Labels"]:
+            name = label["Name"]
+
+            for instance in label["Instances"]:
+                bounding_box = instance["BoundingBox"]
+
+                x0 = int(bounding_box["Left"] * width)
+                y0 = int(bounding_box["Top"] * height)
+                x1 = x0 + int(bounding_box["Width"] * width)
+                y1 = y0 + int(bounding_box["Height"] * height)
+
+                draw.rectangle([x0, y0, x1, y1], outline=(255, 0, 0), width=10)
+                draw.text((x0, y1), name, font=font, fill=(255, 0, 0))
+
+        image.save(output_path)
+
+
+if __name__ == "__main__":
+    main()
